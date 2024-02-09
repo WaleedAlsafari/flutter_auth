@@ -13,7 +13,12 @@ class _SigninScreenState extends State<SigninScreen> {
   var _emailController = TextEditingController();
   var _passwordController = TextEditingController();
 
+  bool _isLoading = false;
+
   Future signIn() async {
+    setState(() {
+      _isLoading = true;
+    });
     await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim());
@@ -147,13 +152,17 @@ class _SigninScreenState extends State<SigninScreen> {
                 height: 60,
                 margin: EdgeInsets.fromLTRB(24, 30, 24, 18),
                 padding: const EdgeInsets.symmetric(horizontal: 32),
-                child: Text(
-                  'Sign in',
-                  style: GoogleFonts.robotoCondensed(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold),
-                ),
+                child: _isLoading
+                    ? const CircularProgressIndicator(
+                        color: Colors.white,
+                      )
+                    : Text(
+                        'Sign in',
+                        style: GoogleFonts.robotoCondensed(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold),
+                      ),
               ),
             ),
             Row(
@@ -164,12 +173,16 @@ class _SigninScreenState extends State<SigninScreen> {
                   style: GoogleFonts.robotoCondensed(
                       fontWeight: FontWeight.w600, fontSize: 16),
                 ),
-                Text(
-                  'Sign up now',
-                  style: GoogleFonts.robotoCondensed(
-                      color: Colors.green,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16),
+                GestureDetector(
+                  onTap: () => Navigator.of(context)
+                      .pushReplacementNamed("signUpScreen"),
+                  child: Text(
+                    'Sign up now',
+                    style: GoogleFonts.robotoCondensed(
+                        color: Colors.green,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16),
+                  ),
                 )
               ],
             )
