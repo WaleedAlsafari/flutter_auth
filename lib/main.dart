@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_auth/Auth.dart';
 import 'package:flutter_auth/screens/home_screen.dart';
+import 'package:flutter_auth/screens/resetPass_screen.dart';
 import 'package:flutter_auth/screens/sign_in_screen.dart';
 import 'package:flutter_auth/screens/sign_up_screen.dart';
 
@@ -29,6 +30,7 @@ class myApp extends StatelessWidget {
         'homeScreen': (context) => const HomeScreen(),
         'signInScreen': (context) => const SigninScreen(),
         'signUpScreen': (context) => const SignupScreen(),
+        'resetPassScreen': (context) => const ResetPassScreen(),
       },
     );
   }

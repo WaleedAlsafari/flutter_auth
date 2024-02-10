@@ -11,23 +11,59 @@ class SignupScreen extends StatefulWidget {
 
 class _SignupScreenState extends State<SignupScreen> {
   var _emailController = TextEditingController();
-  var _passwordController = TextEditingController();
+  var _passController = TextEditingController();
+  var _confirmPassController = TextEditingController();
 
   bool _isLoading = false;
 
-  Future signIn() async {
-    setState(() {
-      _isLoading = true;
-    });
-    await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim());
+  Future signUp() async {
+    if (isPassMatch()) {
+      setState(() {
+        _isLoading = true;
+      });
+      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+          email: _emailController.text.trim(),
+          password: _passController.text.trim());
+      Navigator.of(context).pushNamed('/');
+    } else {
+      var snackBar = SnackBar(
+        backgroundColor: Color.fromARGB(255, 147, 30, 30),
+        showCloseIcon: true,
+        closeIconColor: Colors.white,
+        content: Row(
+          children: [
+            const Icon(
+              Icons.report_problem_outlined,
+              color: Colors.white,
+            ),
+            const SizedBox(width: 10),
+            Text(
+              'Password doesn\'t match!',
+              style: GoogleFonts.robotoCondensed(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500),
+            )
+          ],
+        ),
+      );
+      ScaffoldMessenger.of(context).showSnackBar(snackBar);
+    }
+  }
+
+  bool isPassMatch() {
+    if (_passController.text == _confirmPassController.text) {
+      return true;
+    } else {
+      return false;
+    }
   }
 
   @override
   void dispose() {
     _emailController.dispose();
-    _passwordController.dispose();
+    _passController.dispose();
+    _confirmPassController.dispose();
     super.dispose();
   }
 
@@ -39,7 +75,7 @@ class _SignupScreenState extends State<SignupScreen> {
         child: ListView(
           children: [
             const SizedBox(
-              height: 100,
+              height: 50,
             ),
             Column(
               children: [
@@ -91,25 +127,30 @@ class _SignupScreenState extends State<SignupScreen> {
                   TextField(
                     controller: _emailController,
                     decoration: InputDecoration(
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 20),
-                      suffixIcon: Icon(Icons.lock_outline),
-                      filled: true,
-                      fillColor: Colors.white,
-                      hintText: 'Enter your Email',
-                      hintStyle: GoogleFonts.robotoCondensed(),
-                      border: const OutlineInputBorder(
-                          borderSide: BorderSide(),
-                          borderRadius: BorderRadius.all(Radius.circular(30))),
-                      enabledBorder: const OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: Color.fromARGB(255, 238, 238, 238),
-                          ),
-                          borderRadius: BorderRadius.all(Radius.circular(30))),
-                    ),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 20),
+                        suffixIcon: const Icon(Icons.lock_outline),
+                        filled: true,
+                        fillColor: Colors.white,
+                        hintText: 'Enter your Email',
+                        hintStyle: GoogleFonts.robotoCondensed(),
+                        border: const OutlineInputBorder(
+                            borderSide: BorderSide(),
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(30))),
+                        enabledBorder: const OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Color.fromARGB(255, 238, 238, 238),
+                            ),
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(30))),
+                        focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(30),
+                            borderSide: const BorderSide(
+                                color: Color.fromARGB(255, 248, 136, 8)))),
                   ),
                   const SizedBox(
-                    height: 18,
+                    height: 12,
                   ),
                   Text(
                     'Password',
@@ -120,26 +161,35 @@ class _SignupScreenState extends State<SignupScreen> {
                     height: 12,
                   ),
                   TextField(
-                    controller: _passwordController,
+                    controller: _passController,
+                    obscureText: true,
                     decoration: InputDecoration(
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 20),
-                      suffixIcon: const Icon(Icons.lock_outline),
-                      filled: true,
-                      fillColor: Colors.white,
-                      hintText: 'Enter your Password',
-                      hintStyle: GoogleFonts.robotoCondensed(),
-                      border: const OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(30))),
-                      enabledBorder: const OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: Color.fromARGB(255, 238, 238, 238),
-                          ),
-                          borderRadius: BorderRadius.all(Radius.circular(30))),
-                    ),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 20),
+                        suffixIcon: const Icon(Icons.lock_outline),
+                        filled: true,
+                        fillColor: Colors.white,
+                        hintText: 'Enter your Password',
+                        hintStyle: GoogleFonts.robotoCondensed(),
+                        border: const OutlineInputBorder(
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(30))),
+                        enabledBorder: const OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Color.fromARGB(255, 238, 238, 238),
+                            ),
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(30))),
+                        focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(30),
+                            borderSide: const BorderSide(
+                                color: Color.fromARGB(255, 248, 136, 8)))),
+                  ),
+                  const SizedBox(
+                    height: 12,
                   ),
                   Text(
-                    'Password',
+                    'Confirm Password',
                     style: GoogleFonts.robotoCondensed(
                         fontSize: 20, fontWeight: FontWeight.w700),
                   ),
@@ -147,37 +197,43 @@ class _SignupScreenState extends State<SignupScreen> {
                     height: 12,
                   ),
                   TextField(
-                    controller: _passwordController,
+                    controller: _confirmPassController,
+                    obscureText: true,
                     decoration: InputDecoration(
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 20),
-                      suffixIcon: const Icon(Icons.lock_outline),
-                      filled: true,
-                      fillColor: Colors.white,
-                      hintText: 'Enter your Password',
-                      hintStyle: GoogleFonts.robotoCondensed(),
-                      border: const OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(30))),
-                      enabledBorder: const OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: Color.fromARGB(255, 238, 238, 238),
-                          ),
-                          borderRadius: BorderRadius.all(Radius.circular(30))),
-                    ),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 20),
+                        suffixIcon: const Icon(Icons.lock_outline),
+                        filled: true,
+                        fillColor: Colors.white,
+                        hintText: 'Re-enter your password',
+                        hintStyle: GoogleFonts.robotoCondensed(),
+                        border: const OutlineInputBorder(
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(30))),
+                        enabledBorder: const OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Color.fromARGB(255, 238, 238, 238),
+                            ),
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(30))),
+                        focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(30),
+                            borderSide: const BorderSide(
+                                color: Color.fromARGB(255, 248, 136, 8)))),
                   ),
                 ],
               ),
             ),
             GestureDetector(
-              onTap: signIn,
+              onTap: signUp,
               child: Container(
                 decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(30),
-                    color: Color.fromARGB(255, 248, 136, 8)),
+                    color: const Color.fromARGB(255, 248, 136, 8)),
                 alignment: Alignment.center,
                 width: double.infinity,
                 height: 60,
-                margin: EdgeInsets.fromLTRB(24, 30, 24, 18),
+                margin: const EdgeInsets.fromLTRB(24, 30, 24, 18),
                 padding: const EdgeInsets.symmetric(horizontal: 32),
                 child: _isLoading
                     ? const CircularProgressIndicator(
@@ -196,19 +252,26 @@ class _SignupScreenState extends State<SignupScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  'Not yet a member? ',
+                  'Already have an account?  ',
                   style: GoogleFonts.robotoCondensed(
                       fontWeight: FontWeight.w600, fontSize: 16),
                 ),
-                Text(
-                  'Sign up now',
-                  style: GoogleFonts.robotoCondensed(
-                      color: Colors.green,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16),
+                GestureDetector(
+                  onTap: () => Navigator.of(context)
+                      .pushReplacementNamed("signInScreen"),
+                  child: Text(
+                    'Log in now',
+                    style: GoogleFonts.robotoCondensed(
+                        color: Colors.green,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16),
+                  ),
                 )
               ],
-            )
+            ),
+            const SizedBox(
+              height: 20,
+            ),
           ],
         ),
       ),

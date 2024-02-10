@@ -13,6 +13,10 @@ class _SigninScreenState extends State<SigninScreen> {
   var _emailController = TextEditingController();
   var _passwordController = TextEditingController();
 
+  void _resetPass() {
+    Navigator.of(context).pushNamed('resetPassScreen');
+  }
+
   bool _isLoading = false;
 
   Future signIn() async {
@@ -91,22 +95,27 @@ class _SigninScreenState extends State<SigninScreen> {
                   TextField(
                     controller: _emailController,
                     decoration: InputDecoration(
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 20),
-                      suffixIcon: Icon(Icons.lock_outline),
-                      filled: true,
-                      fillColor: Colors.white,
-                      hintText: 'Enter your Email',
-                      hintStyle: GoogleFonts.robotoCondensed(),
-                      border: const OutlineInputBorder(
-                          borderSide: BorderSide(),
-                          borderRadius: BorderRadius.all(Radius.circular(30))),
-                      enabledBorder: const OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: Color.fromARGB(255, 238, 238, 238),
-                          ),
-                          borderRadius: BorderRadius.all(Radius.circular(30))),
-                    ),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 20),
+                        suffixIcon: Icon(Icons.lock_outline),
+                        filled: true,
+                        fillColor: Colors.white,
+                        hintText: 'Enter your Email',
+                        hintStyle: GoogleFonts.robotoCondensed(),
+                        border: const OutlineInputBorder(
+                            borderSide: BorderSide(),
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(30))),
+                        enabledBorder: const OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Color.fromARGB(255, 238, 238, 238),
+                            ),
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(30))),
+                        focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(30),
+                            borderSide: const BorderSide(
+                                color: Color.fromARGB(255, 248, 136, 8)))),
                   ),
                   const SizedBox(
                     height: 18,
@@ -121,23 +130,45 @@ class _SigninScreenState extends State<SigninScreen> {
                   ),
                   TextField(
                     controller: _passwordController,
+                    obscureText: true,
                     decoration: InputDecoration(
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 20),
-                      suffixIcon: const Icon(Icons.lock_outline),
-                      filled: true,
-                      fillColor: Colors.white,
-                      hintText: 'Enter your Password',
-                      hintStyle: GoogleFonts.robotoCondensed(),
-                      border: const OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(30))),
-                      enabledBorder: const OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: Color.fromARGB(255, 238, 238, 238),
-                          ),
-                          borderRadius: BorderRadius.all(Radius.circular(30))),
-                    ),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 20),
+                        suffixIcon: const Icon(Icons.lock_outline),
+                        filled: true,
+                        fillColor: Colors.white,
+                        hintText: 'Enter your Password',
+                        hintStyle: GoogleFonts.robotoCondensed(),
+                        border: const OutlineInputBorder(
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(30))),
+                        enabledBorder: const OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Color.fromARGB(255, 238, 238, 238),
+                            ),
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(30))),
+                        focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(30),
+                            borderSide: const BorderSide(
+                                color: Color.fromARGB(255, 248, 136, 8)))),
                   ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8, right: 8),
+                        child: GestureDetector(
+                          onTap: _resetPass,
+                          child: Text(
+                            'Reset your password',
+                            style: GoogleFonts.robotoCondensed(
+                                fontSize: 16, fontWeight: FontWeight.w500),
+                          ),
+                        ),
+                      )
+                    ],
+                  )
                 ],
               ),
             ),
@@ -169,7 +200,7 @@ class _SigninScreenState extends State<SigninScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  'Not yet a member? ',
+                  'Not yet a member?  ',
                   style: GoogleFonts.robotoCondensed(
                       fontWeight: FontWeight.w600, fontSize: 16),
                 ),
