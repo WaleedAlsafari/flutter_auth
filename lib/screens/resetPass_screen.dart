@@ -35,7 +35,11 @@ class _ResetPassScreenState extends State<ResetPassScreen> {
             const SizedBox(
               height: 12,
             ),
-            TextField()
+            TextField(
+              decoration: InputDecoration(
+                hintText: 'Someone@12345.com'
+              ),
+            )
           ],
         ),
       ),
