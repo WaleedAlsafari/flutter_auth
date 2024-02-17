@@ -12,6 +12,11 @@ class SigninScreen extends StatefulWidget {
 class _SigninScreenState extends State<SigninScreen> {
   var _emailController = TextEditingController();
   var _passwordController = TextEditingController();
+  GlobalKey<FormState> _globalKey = GlobalKey<FormState>();
+  RegExp emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+  bool isEmail = true;
+  bool isPass = true;
+  bool isPassHide = true;
 
   void _resetPass() {
     Navigator.of(context).pushNamed('resetPassScreen');
@@ -23,9 +28,18 @@ class _SigninScreenState extends State<SigninScreen> {
     setState(() {
       _isLoading = true;
     });
-    await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim());
+    if (_globalKey.currentState!.validate()) {
+      try {
+        await FirebaseAuth.instance.signInWithEmailAndPassword(
+            email: _emailController.text.trim(),
+            password: _passwordController.text.trim());
+      } catch (FirebaseAuthException) {
+        print("Account is incorrect!");
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -45,18 +59,21 @@ class _SigninScreenState extends State<SigninScreen> {
             const SizedBox(
               height: 100,
             ),
-            Column(
-              children: [
-                Container(
-                    padding: const EdgeInsets.all(6),
-                    width: 175,
-                    height: 175,
-                    child: Image.asset(
-                      'images/leaf.png',
-                      width: 60,
-                      height: 60,
-                    )),
-              ],
+            Form(
+              key: _globalKey,
+              child: Column(
+                children: [
+                  Container(
+                      padding: const EdgeInsets.all(6),
+                      width: 175,
+                      height: 175,
+                      child: Image.asset(
+                        'images/leaf.png',
+                        width: 60,
+                        height: 60,
+                      )),
+                ],
+              ),
             ),
             const SizedBox(
               height: 20,
@@ -92,7 +109,7 @@ class _SigninScreenState extends State<SigninScreen> {
                   const SizedBox(
                     height: 12,
                   ),
-                  TextField(
+                  TextFormField(
                     controller: _emailController,
                     decoration: InputDecoration(
                         contentPadding: const EdgeInsets.symmetric(
@@ -102,6 +119,7 @@ class _SigninScreenState extends State<SigninScreen> {
                         fillColor: Colors.white,
                         hintText: 'Enter your Email',
                         hintStyle: GoogleFonts.robotoCondensed(),
+                        errorText: isEmail ? null : 'Incorrect Email',
                         border: const OutlineInputBorder(
                             borderSide: BorderSide(),
                             borderRadius:
@@ -116,6 +134,23 @@ class _SigninScreenState extends State<SigninScreen> {
                             borderRadius: BorderRadius.circular(30),
                             borderSide: const BorderSide(
                                 color: Color.fromARGB(255, 248, 136, 8)))),
+                    validator: (value) {
+                      if (!emailRegex.hasMatch(value!) || value == null) {
+                        return 'Invalid Email';
+                      }
+                      return null;
+                    },
+                    onChanged: (value) {
+                      if (!emailRegex.hasMatch(value) || value.isEmpty) {
+                        setState(() {
+                          isEmail = false;
+                        });
+                      } else {
+                        setState(() {
+                          isEmail = true;
+                        });
+                      }
+                    },
                   ),
                   const SizedBox(
                     height: 18,
@@ -130,11 +165,19 @@ class _SigninScreenState extends State<SigninScreen> {
                   ),
                   TextField(
                     controller: _passwordController,
-                    obscureText: true,
+                    obscureText: isPassHide,
                     decoration: InputDecoration(
                         contentPadding: const EdgeInsets.symmetric(
                             horizontal: 16, vertical: 20),
-                        suffixIcon: const Icon(Icons.lock_outline),
+                        suffixIcon: GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                isPassHide = !isPassHide;
+                              });
+                            },
+                            child: Icon(isPassHide
+                                ? Icons.lock_outline
+                                : Icons.lock_open)),
                         filled: true,
                         fillColor: Colors.white,
                         hintText: 'Enter your Password',
