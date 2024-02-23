@@ -15,9 +15,8 @@ class _SigninScreenState extends State<SigninScreen> {
   GlobalKey<FormState> _globalKey = GlobalKey<FormState>();
   RegExp emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
   bool isEmail = true;
-  bool isValidAccount = true;
+  bool isPass = true;
   bool isPassHide = true;
-  
 
   void _resetPass() {
     Navigator.of(context).pushNamed('resetPassScreen');
@@ -26,28 +25,21 @@ class _SigninScreenState extends State<SigninScreen> {
   bool _isLoading = false;
 
   Future signIn() async {
-      if(_globalKey.currentState!.validate()){
+    setState(() {
+      _isLoading = true;
+    });
+    if (_globalKey.currentState!.validate()) {
+      try {
+        await FirebaseAuth.instance.signInWithEmailAndPassword(
+            email: _emailController.text.trim(),
+            password: _passwordController.text.trim());
+      } catch (FirebaseAuthException) {
+        print("Account is incorrect!");
         setState(() {
-        _isLoading = true;
-      });
-      if (_globalKey.currentState!.validate()) {
-        try {
-          await FirebaseAuth.instance.signInWithEmailAndPassword(
-              email: _emailController.text.trim(),
-              password: _passwordController.text.trim());
-        } catch (FirebaseAuthException) {
-          print("Account is incorrect!");
-          setState(() {
-            _isLoading = false;
-          });
-        }
-      }
-      }
-      else{
-        setState(() {
-          isValidAccount = false;
+          _isLoading = false;
         });
       }
+    }
   }
 
   @override
@@ -118,12 +110,11 @@ class _SigninScreenState extends State<SigninScreen> {
                     height: 12,
                   ),
                   TextFormField(
-                    keyboardType: TextInputType.emailAddress,
                     controller: _emailController,
                     decoration: InputDecoration(
                         contentPadding: const EdgeInsets.symmetric(
                             horizontal: 16, vertical: 20),
-                        suffixIcon: const Icon(Icons.lock_outline),
+                        suffixIcon: Icon(Icons.lock_outline),
                         filled: true,
                         fillColor: Colors.white,
                         hintText: 'Enter your Email',
@@ -174,7 +165,6 @@ class _SigninScreenState extends State<SigninScreen> {
                   ),
                   TextField(
                     controller: _passwordController,
-                    keyboardType: TextInputType.visiblePassword,
                     obscureText: isPassHide,
                     decoration: InputDecoration(
                         contentPadding: const EdgeInsets.symmetric(
@@ -207,9 +197,9 @@ class _SigninScreenState extends State<SigninScreen> {
                                 color: Color.fromARGB(255, 248, 136, 8)))),
                   ),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      const Text('The Email or The \n'),
+                      Text("data"),
                       Padding(
                         padding: const EdgeInsets.only(top: 8, right: 8),
                         child: GestureDetector(
@@ -231,11 +221,11 @@ class _SigninScreenState extends State<SigninScreen> {
               child: Container(
                 decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(30),
-                    color: const Color.fromARGB(255, 248, 136, 8)),
+                    color: Color.fromARGB(255, 248, 136, 8)),
                 alignment: Alignment.center,
                 width: double.infinity,
                 height: 60,
-                margin: const EdgeInsets.fromLTRB(24, 30, 24, 18),
+                margin: EdgeInsets.fromLTRB(24, 30, 24, 18),
                 padding: const EdgeInsets.symmetric(horizontal: 32),
                 child: _isLoading
                     ? const CircularProgressIndicator(
