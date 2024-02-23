@@ -13,41 +13,51 @@ class _SignupScreenState extends State<SignupScreen> {
   var _emailController = TextEditingController();
   var _passController = TextEditingController();
   var _confirmPassController = TextEditingController();
+  GlobalKey<FormState> formkey = GlobalKey<FormState>();
+  bool isPassHide = true;
+  bool isConfirmPassHide = true;
 
   bool _isLoading = false;
 
   Future signUp() async {
-    if (isPassMatch()) {
-      setState(() {
-        _isLoading = true;
-      });
-      await FirebaseAuth.instance.createUserWithEmailAndPassword(
-          email: _emailController.text.trim(),
-          password: _passController.text.trim());
-      Navigator.of(context).pushNamed('/');
-    } else {
-      var snackBar = SnackBar(
-        backgroundColor: Color.fromARGB(255, 147, 30, 30),
-        showCloseIcon: true,
-        closeIconColor: Colors.white,
-        content: Row(
-          children: [
-            const Icon(
-              Icons.report_problem_outlined,
-              color: Colors.white,
-            ),
-            const SizedBox(width: 10),
-            Text(
-              'Password doesn\'t match!',
-              style: GoogleFonts.robotoCondensed(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500),
-            )
-          ],
-        ),
-      );
-      ScaffoldMessenger.of(context).showSnackBar(snackBar);
+    if (formkey.currentState!.validate()) {
+      if (isPassMatch()) {
+        setState(() {
+          _isLoading = true;
+        });
+        await FirebaseAuth.instance.createUserWithEmailAndPassword(
+            email: _emailController.text.trim(),
+            password: _passController.text.trim());
+        Navigator.of(context).pushNamed('/');
+      } else {
+        var snackBar = SnackBar(
+          backgroundColor: Color.fromARGB(255, 255, 255, 255),
+          showCloseIcon: true,
+          closeIconColor: Color.fromARGB(255, 183, 3, 3),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+          margin: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          behavior: SnackBarBehavior.floating,
+          dismissDirection: DismissDirection.horizontal,
+          content: Row(
+            children: [
+              const Icon(
+                Icons.report_problem_outlined,
+                color: Color.fromARGB(255, 183, 3, 3),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                'Password doesn\'t match!',
+                style: GoogleFonts.robotoCondensed(
+                    color: Color.fromARGB(255, 183, 3, 3),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500),
+              )
+            ],
+          ),
+        );
+        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+      }
     }
   }
 
@@ -77,18 +87,21 @@ class _SignupScreenState extends State<SignupScreen> {
             const SizedBox(
               height: 50,
             ),
-            Column(
-              children: [
-                Container(
-                    padding: const EdgeInsets.all(6),
-                    width: 175,
-                    height: 175,
-                    child: Image.asset(
-                      'images/leaf.png',
-                      width: 60,
-                      height: 60,
-                    )),
-              ],
+            Form(
+              key: formkey,
+              child: Column(
+                children: [
+                  Container(
+                      padding: const EdgeInsets.all(6),
+                      width: 175,
+                      height: 175,
+                      child: Image.asset(
+                        'images/leaf.png',
+                        width: 60,
+                        height: 60,
+                      )),
+                ],
+              ),
             ),
             const SizedBox(
               height: 20,
@@ -124,9 +137,15 @@ class _SignupScreenState extends State<SignupScreen> {
                   const SizedBox(
                     height: 12,
                   ),
-                  TextField(
+                  TextFormField(
                     controller: _emailController,
+                    validator: (value) {
+                      if (value!.isEmpty) {
+                        return 'Please enter your Email!';
+                      }
+                    },
                     decoration: InputDecoration(
+                        //errorText: 'Please enter your Email',
                         contentPadding: const EdgeInsets.symmetric(
                             horizontal: 16, vertical: 20),
                         suffixIcon: const Icon(Icons.lock_outline),
@@ -160,13 +179,21 @@ class _SignupScreenState extends State<SignupScreen> {
                   const SizedBox(
                     height: 12,
                   ),
-                  TextField(
+                  TextFormField(
                     controller: _passController,
-                    obscureText: true,
+                    obscureText: isPassHide,
                     decoration: InputDecoration(
                         contentPadding: const EdgeInsets.symmetric(
                             horizontal: 16, vertical: 20),
-                        suffixIcon: const Icon(Icons.lock_outline),
+                        suffixIcon: GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                isPassHide = !isPassHide;
+                              });
+                            },
+                            child: Icon(isPassHide
+                                ? Icons.lock_outline
+                                : Icons.lock_open)),
                         filled: true,
                         fillColor: Colors.white,
                         hintText: 'Enter your Password',
@@ -196,13 +223,21 @@ class _SignupScreenState extends State<SignupScreen> {
                   const SizedBox(
                     height: 12,
                   ),
-                  TextField(
+                  TextFormField(
                     controller: _confirmPassController,
-                    obscureText: true,
+                    obscureText: isConfirmPassHide,
                     decoration: InputDecoration(
                         contentPadding: const EdgeInsets.symmetric(
                             horizontal: 16, vertical: 20),
-                        suffixIcon: const Icon(Icons.lock_outline),
+                        suffixIcon: GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                isPassHide = !isPassHide;
+                              });
+                            },
+                            child: Icon(isPassHide
+                                ? Icons.lock_outline
+                                : Icons.lock_open)),
                         filled: true,
                         fillColor: Colors.white,
                         hintText: 'Re-enter your password',
