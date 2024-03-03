@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:awesome_dialog/awesome_dialog.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -14,22 +15,30 @@ class _SignupScreenState extends State<SignupScreen> {
   var _passController = TextEditingController();
   var _confirmPassController = TextEditingController();
   GlobalKey<FormState> formkey = GlobalKey<FormState>();
+  RegExp emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+  RegExp passwordRegex = RegExp(r'^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$');
+  bool isEmail = true;
+  bool isPass = true;
   bool isPassHide = true;
+  bool isPassMatch = true;
   bool isConfirmPassHide = true;
 
   bool _isLoading = false;
 
   Future signUp() async {
+    setState(() {
+      _isLoading = true;
+    });
     if (formkey.currentState!.validate()) {
-      if (isPassMatch()) {
-        setState(() {
-          _isLoading = true;
-        });
+      try {
         await FirebaseAuth.instance.createUserWithEmailAndPassword(
             email: _emailController.text.trim(),
             password: _passController.text.trim());
-        Navigator.of(context).pushNamed('/');
-      } else {
+      } catch (FirebaseAuthException) {
+        print("Account is used!");
+        setState(() {
+          _isLoading = false;
+        });
         var snackBar = SnackBar(
           backgroundColor: Color.fromARGB(255, 255, 255, 255),
           showCloseIcon: true,
@@ -47,7 +56,7 @@ class _SignupScreenState extends State<SignupScreen> {
               ),
               const SizedBox(width: 10),
               Text(
-                'Password doesn\'t match!',
+                'The Email is already used',
                 style: GoogleFonts.robotoCondensed(
                     color: Color.fromARGB(255, 183, 3, 3),
                     fontSize: 16,
@@ -58,14 +67,35 @@ class _SignupScreenState extends State<SignupScreen> {
         );
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
       }
-    }
-  }
-
-  bool isPassMatch() {
-    if (_passController.text == _confirmPassController.text) {
-      return true;
-    } else {
-      return false;
+      FirebaseAuth.instance.currentUser!.sendEmailVerification();
+      // ignore: use_build_context_synchronously
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text("Verification", style: GoogleFonts.robotoCondensed()),
+            content: Text(
+                "A verification email has sent to you, please check your mailbox and verfiy your account",
+                style:
+                    GoogleFonts.robotoCondensed(fontWeight: FontWeight.w500)),
+            backgroundColor: Colors.grey[200],
+            actions: [
+              MaterialButton(
+                  onPressed: () {
+                    Navigator.of(context).pushReplacementNamed("signInScreen");
+                    FirebaseAuth.instance.signOut();
+                  },
+                  color: Colors.blue,
+                  child: Text("Continue",
+                      style: GoogleFonts.robotoCondensed(
+                          color: Colors.white, fontWeight: FontWeight.w500)))
+            ],
+          );
+        },
+      );
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -153,6 +183,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         fillColor: Colors.white,
                         hintText: 'Enter your Email',
                         hintStyle: GoogleFonts.robotoCondensed(),
+                        errorText: isEmail ? null : 'Incorrect Email',
                         border: const OutlineInputBorder(
                             borderSide: BorderSide(),
                             borderRadius:
@@ -167,6 +198,17 @@ class _SignupScreenState extends State<SignupScreen> {
                             borderRadius: BorderRadius.circular(30),
                             borderSide: const BorderSide(
                                 color: Color.fromARGB(255, 248, 136, 8)))),
+                    onChanged: (value) {
+                      if (!emailRegex.hasMatch(value) || value.isEmpty) {
+                        setState(() {
+                          isEmail = false;
+                        });
+                      } else {
+                        setState(() {
+                          isEmail = true;
+                        });
+                      }
+                    },
                   ),
                   const SizedBox(
                     height: 12,
@@ -197,6 +239,9 @@ class _SignupScreenState extends State<SignupScreen> {
                         filled: true,
                         fillColor: Colors.white,
                         hintText: 'Enter your Password',
+                        errorText: isPass
+                            ? null
+                            : 'Password must contain at least one letter, one digit, \nand be at least 8 characters long.',
                         hintStyle: GoogleFonts.robotoCondensed(),
                         border: const OutlineInputBorder(
                             borderRadius:
@@ -211,6 +256,17 @@ class _SignupScreenState extends State<SignupScreen> {
                             borderRadius: BorderRadius.circular(30),
                             borderSide: const BorderSide(
                                 color: Color.fromARGB(255, 248, 136, 8)))),
+                    onChanged: (value) {
+                      if (!passwordRegex.hasMatch(value)) {
+                        setState(() {
+                          isPass = false;
+                        });
+                      } else {
+                        setState(() {
+                          isPass = true;
+                        });
+                      }
+                    },
                   ),
                   const SizedBox(
                     height: 12,
@@ -242,6 +298,8 @@ class _SignupScreenState extends State<SignupScreen> {
                         fillColor: Colors.white,
                         hintText: 'Re-enter your password',
                         hintStyle: GoogleFonts.robotoCondensed(),
+                        errorText:
+                            isPassMatch ? null : 'Password doesn\'t match',
                         border: const OutlineInputBorder(
                             borderRadius:
                                 BorderRadius.all(Radius.circular(30))),
@@ -255,6 +313,17 @@ class _SignupScreenState extends State<SignupScreen> {
                             borderRadius: BorderRadius.circular(30),
                             borderSide: const BorderSide(
                                 color: Color.fromARGB(255, 248, 136, 8)))),
+                    onChanged: (value) {
+                      if (value != _passController.text) {
+                        setState(() {
+                          isPassMatch = false;
+                        });
+                      } else {
+                        setState(() {
+                          isPassMatch = true;
+                        });
+                      }
+                    },
                   ),
                 ],
               ),
@@ -275,7 +344,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         color: Colors.white,
                       )
                     : Text(
-                        'Sign in',
+                        'Sign up',
                         style: GoogleFonts.robotoCondensed(
                             color: Colors.white,
                             fontSize: 20,

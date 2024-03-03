@@ -38,6 +38,8 @@ dependencies:
   firebase_auth: ^4.17.4
   firebase_core: ^2.25.4
   google_fonts: ^6.1.0
+  awesome_dialog: ^3.2.0
+  firebase_dynamic_links: ^5.4.15
 
 dev_dependencies:
   flutter_test:

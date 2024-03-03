@@ -15,8 +15,8 @@ class _SigninScreenState extends State<SigninScreen> {
   GlobalKey<FormState> _globalKey = GlobalKey<FormState>();
   RegExp emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
   bool isEmail = true;
-  bool isPass = true;
   bool isPassHide = true;
+  bool isValidAccount = true;
 
   void _resetPass() {
     Navigator.of(context).pushNamed('resetPassScreen');
@@ -26,6 +26,7 @@ class _SigninScreenState extends State<SigninScreen> {
 
   Future signIn() async {
     setState(() {
+      isValidAccount = true;
       _isLoading = true;
     });
     if (_globalKey.currentState!.validate()) {
@@ -33,13 +34,41 @@ class _SigninScreenState extends State<SigninScreen> {
         await FirebaseAuth.instance.signInWithEmailAndPassword(
             email: _emailController.text.trim(),
             password: _passwordController.text.trim());
+        //Navigator.of(context).pushReplacementNamed('homeScreen');
       } catch (FirebaseAuthException) {
-        print("Account is incorrect!");
+        print("Account is used!");
         setState(() {
           _isLoading = false;
         });
+        showSnackBar("No such an account!", Icon(Icons.cancel));
       }
     }
+  }
+
+  void showSnackBar(String text, Icon icon) {
+    var snackBar = SnackBar(
+      backgroundColor: Color.fromARGB(255, 255, 255, 255),
+      showCloseIcon: true,
+      closeIconColor: Color.fromARGB(255, 183, 3, 3),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+      margin: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      behavior: SnackBarBehavior.floating,
+      dismissDirection: DismissDirection.horizontal,
+      content: Row(
+        children: [
+          icon,
+          const SizedBox(width: 10),
+          Text(
+            text,
+            style: GoogleFonts.robotoCondensed(
+                color: Color.fromARGB(255, 183, 3, 3),
+                fontSize: 16,
+                fontWeight: FontWeight.w500),
+          )
+        ],
+      ),
+    );
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
   @override
@@ -134,12 +163,6 @@ class _SigninScreenState extends State<SigninScreen> {
                             borderRadius: BorderRadius.circular(30),
                             borderSide: const BorderSide(
                                 color: Color.fromARGB(255, 248, 136, 8)))),
-                    validator: (value) {
-                      if (!emailRegex.hasMatch(value!) || value == null) {
-                        return 'Invalid Email';
-                      }
-                      return null;
-                    },
                     onChanged: (value) {
                       if (!emailRegex.hasMatch(value) || value.isEmpty) {
                         setState(() {
@@ -196,28 +219,39 @@ class _SigninScreenState extends State<SigninScreen> {
                             borderSide: const BorderSide(
                                 color: Color.fromARGB(255, 248, 136, 8)))),
                   ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      Text("data"),
-                      Padding(
-                        padding: const EdgeInsets.only(top: 8, right: 8),
-                        child: GestureDetector(
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8, left: 8, right: 8),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(),
+                          child: isValidAccount
+                              ? null
+                              : Text(
+                                  "The Email or Password \nis incorrect",
+                                  style: GoogleFonts.robotoCondensed(
+                                      color: Colors.red,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w700),
+                                ),
+                        ),
+                        GestureDetector(
                           onTap: _resetPass,
                           child: Text(
                             'Reset your password',
                             style: GoogleFonts.robotoCondensed(
                                 fontSize: 16, fontWeight: FontWeight.w500),
                           ),
-                        ),
-                      )
-                    ],
+                        )
+                      ],
+                    ),
                   )
                 ],
               ),
             ),
             GestureDetector(
-              onTap: signIn,
+              onTap: () => signIn,
               child: Container(
                 decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(30),
@@ -225,7 +259,7 @@ class _SigninScreenState extends State<SigninScreen> {
                 alignment: Alignment.center,
                 width: double.infinity,
                 height: 60,
-                margin: EdgeInsets.fromLTRB(24, 30, 24, 18),
+                margin: EdgeInsets.fromLTRB(24, 20, 24, 18),
                 padding: const EdgeInsets.symmetric(horizontal: 32),
                 child: _isLoading
                     ? const CircularProgressIndicator(
