@@ -1,6 +1,8 @@
+import 'package:auth_buttons/auth_buttons.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class SigninScreen extends StatefulWidget {
   const SigninScreen({super.key});
@@ -22,6 +24,27 @@ class _SigninScreenState extends State<SigninScreen> {
     Navigator.of(context).pushNamed('resetPassScreen');
   }
 
+  Future signInWithGoogle() async {
+    // Trigger the authentication flow
+    final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+    if (googleUser == null) {
+      return;
+    }
+
+    // Obtain the auth details from the request
+    final GoogleSignInAuthentication? googleAuth =
+        await googleUser?.authentication;
+
+    // Create a new credential
+    final credential = GoogleAuthProvider.credential(
+      accessToken: googleAuth?.accessToken,
+      idToken: googleAuth?.idToken,
+    );
+
+    // Once signed in, return the UserCredential
+    return await FirebaseAuth.instance.signInWithCredential(credential);
+  }
+
   bool _isLoading = false;
 
   Future signIn() async {
@@ -34,6 +57,37 @@ class _SigninScreenState extends State<SigninScreen> {
         await FirebaseAuth.instance.signInWithEmailAndPassword(
             email: _emailController.text.trim(),
             password: _passwordController.text.trim());
+        print(FirebaseAuth.instance.currentUser!.emailVerified);
+        if (!FirebaseAuth.instance.currentUser!.emailVerified) {
+          FirebaseAuth.instance.currentUser!.sendEmailVerification();
+          showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                title:
+                    Text("Verification", style: GoogleFonts.robotoCondensed()),
+                content: Text(
+                    "A verification email has sent to you, please check your mailbox and verfiy your account",
+                    style: GoogleFonts.robotoCondensed(
+                        fontWeight: FontWeight.w500)),
+                backgroundColor: Colors.grey[200],
+                actions: [
+                  MaterialButton(
+                      onPressed: () {
+                        Navigator.of(context)
+                            .pushReplacementNamed("signInScreen");
+                        FirebaseAuth.instance.signOut();
+                      },
+                      color: Colors.blue,
+                      child: Text("Continue",
+                          style: GoogleFonts.robotoCondensed(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w500)))
+                ],
+              );
+            },
+          );
+        }
         //Navigator.of(context).pushReplacementNamed('homeScreen');
       } catch (FirebaseAuthException) {
         print("Account is used!");
@@ -86,7 +140,7 @@ class _SigninScreenState extends State<SigninScreen> {
         child: ListView(
           children: [
             const SizedBox(
-              height: 100,
+              height: 20,
             ),
             Form(
               key: _globalKey,
@@ -250,28 +304,40 @@ class _SigninScreenState extends State<SigninScreen> {
                 ],
               ),
             ),
-            GestureDetector(
-              onTap: () => signIn,
-              child: Container(
-                decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(30),
-                    color: Color.fromARGB(255, 248, 136, 8)),
-                alignment: Alignment.center,
-                width: double.infinity,
-                height: 60,
-                margin: EdgeInsets.fromLTRB(24, 20, 24, 18),
-                padding: const EdgeInsets.symmetric(horizontal: 32),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              child: ElevatedButton(
+                onPressed: signIn,
+                style: ButtonStyle(
+                    padding: MaterialStateProperty.all(
+                        EdgeInsets.symmetric(vertical: 18)),
+                    backgroundColor: MaterialStateProperty.all(
+                        Color.fromARGB(255, 248, 136, 8)),
+                    elevation: MaterialStateProperty.all(4)),
                 child: _isLoading
-                    ? const CircularProgressIndicator(
-                        color: Colors.white,
-                      )
+                    ? const CircularProgressIndicator()
                     : Text(
                         'Sign in',
                         style: GoogleFonts.robotoCondensed(
                             color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold),
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16),
                       ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              child: GoogleAuthButton(
+                onPressed: signInWithGoogle,
+                style: AuthButtonStyle(
+                    elevation: 4,
+                    buttonColor: Colors.white,
+                    borderRadius: 30,
+                    height: 60,
+                    textStyle: GoogleFonts.robotoCondensed(
+                        color: Colors.black87,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600)),
               ),
             ),
             Row(
@@ -294,7 +360,7 @@ class _SigninScreenState extends State<SigninScreen> {
                   ),
                 )
               ],
-            )
+            ),
           ],
         ),
       ),

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:awesome_dialog/awesome_dialog.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -18,6 +17,7 @@ class _SignupScreenState extends State<SignupScreen> {
   RegExp emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
   RegExp passwordRegex = RegExp(r'^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$');
   bool isEmail = true;
+  bool isEmailUsed = false;
   bool isPass = true;
   bool isPassHide = true;
   bool isPassMatch = true;
@@ -38,6 +38,7 @@ class _SignupScreenState extends State<SignupScreen> {
         print("Account is used!");
         setState(() {
           _isLoading = false;
+          isEmailUsed = true;
         });
         var snackBar = SnackBar(
           backgroundColor: Color.fromARGB(255, 255, 255, 255),
@@ -67,32 +68,36 @@ class _SignupScreenState extends State<SignupScreen> {
         );
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
       }
-      FirebaseAuth.instance.currentUser!.sendEmailVerification();
+      if (!isEmailUsed) {
+        FirebaseAuth.instance.currentUser!.sendEmailVerification();
+        showDialog(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: Text("Verification", style: GoogleFonts.robotoCondensed()),
+              content: Text(
+                  "A verification email has sent to you, please check your mailbox and verfiy your account",
+                  style:
+                      GoogleFonts.robotoCondensed(fontWeight: FontWeight.w500)),
+              backgroundColor: Colors.grey[200],
+              actions: [
+                MaterialButton(
+                    onPressed: () {
+                      Navigator.of(context)
+                          .pushReplacementNamed("signInScreen");
+                      FirebaseAuth.instance.signOut();
+                    },
+                    color: Colors.blue,
+                    child: Text("Continue",
+                        style: GoogleFonts.robotoCondensed(
+                            color: Colors.white, fontWeight: FontWeight.w500)))
+              ],
+            );
+          },
+        );
+      }
       // ignore: use_build_context_synchronously
-      showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: Text("Verification", style: GoogleFonts.robotoCondensed()),
-            content: Text(
-                "A verification email has sent to you, please check your mailbox and verfiy your account",
-                style:
-                    GoogleFonts.robotoCondensed(fontWeight: FontWeight.w500)),
-            backgroundColor: Colors.grey[200],
-            actions: [
-              MaterialButton(
-                  onPressed: () {
-                    Navigator.of(context).pushReplacementNamed("signInScreen");
-                    FirebaseAuth.instance.signOut();
-                  },
-                  color: Colors.blue,
-                  child: Text("Continue",
-                      style: GoogleFonts.robotoCondensed(
-                          color: Colors.white, fontWeight: FontWeight.w500)))
-            ],
-          );
-        },
-      );
+
       setState(() {
         _isLoading = false;
       });
